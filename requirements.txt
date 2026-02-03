@@ -1,0 +1,6 @@
+pyyaml>=6.0
+numpy>=1.24
+opencv-python>=4.8
+pytesseract>=0.3.10
+easyocr>=1.7.1
+requests>=2.31

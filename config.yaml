@@ -1,0 +1,58 @@
+device:
+  language_mode: auto  # auto|el|en
+  audio_volume: 85
+
+camera:
+  width: 1280
+  height: 720
+  warmup_ms: 300
+
+quality:
+  enabled: true
+  blur_threshold: 120.0
+  min_brightness: 60.0
+  max_brightness: 200.0
+
+ocr:
+  backend: "easyocr"  # easyocr|paddleocr|tesseract
+  min_confidence: 55.0
+  preprocess: true
+  scale: 1.6
+  tesseract_langs: "ell+eng"
+  easyocr_langs: ["en"]
+  paddle_langs: ["en"]
+  paddle_use_angle_cls: true
+  paddle_show_log: false
+
+cloud_ocr:
+  enabled: false
+  provider: "azure_read"
+  endpoint: "https://<your-resource>.cognitiveservices.azure.com"
+  key: ""
+  language: "en"
+  reading_order: "basic"
+  timeout_seconds: 15
+  poll_interval_seconds: 0.5
+  trigger_confidence: 40.0
+
+tts:
+  voice_en: "en-us"
+  voice_el: "el"
+  rate: 145
+  pitch: 40
+  amplitude: 140
+  word_gap_ms: 5
+
+storage:
+  last_result_path: "data/last_result.json"
+
+prompts:
+  base_dir: "assets/prompts"
+  map:
+    capturing: "capturing"
+    reading: "reading"
+    too_dark: "too_dark"
+    too_blurry: "too_blurry"
+    no_text: "no_text"
+    not_sure: "not_sure"
+    camera_error: "camera_error"
