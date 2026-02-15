@@ -1,5 +1,5 @@
 device:
-  language_mode: auto  # auto|el|en
+  language_mode: en  # auto|el|en
   audio_volume: 85
 
 camera:
@@ -16,19 +16,20 @@ quality:
 ocr:
   backend: "easyocr"  # easyocr|paddleocr|tesseract
   min_confidence: 55.0
-  preprocess: true
+  preprocess: false
   scale: 1.6
-  tesseract_langs: "ell+eng"
+  tesseract_langs: "eng"
   easyocr_langs: ["en"]
   paddle_langs: ["en"]
   paddle_use_angle_cls: true
   paddle_show_log: false
 
 cloud_ocr:
-  enabled: false
+  enabled: true
+  primary: true  # true = Azure first, local OCR fallback; false = local first
   provider: "azure_read"
-  endpoint: "https://<your-resource>.cognitiveservices.azure.com"
-  key: ""
+  endpoint: "https://craftsman.cognitiveservices.azure.com"
+  key: ""  # set via AZURE_CV_KEY env var
   language: "en"
   reading_order: "basic"
   timeout_seconds: 15

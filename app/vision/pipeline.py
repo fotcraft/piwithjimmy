@@ -1,3 +1,4 @@
+import logging
 from dataclasses import dataclass
 from typing import Any, Dict, List
 
@@ -7,6 +8,8 @@ from app.vision.cloud_ocr import AzureReadOcr
 from app.vision.ocr import OcrEngine
 from app.vision.quality import QualityChecker
 from app.vision.text_detector import Box, TextDetector
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -26,6 +29,9 @@ class VisionPipeline:
         self.cloud_trigger_conf = float(
             config.get("cloud_ocr", {}).get("trigger_confidence", 40.0)
         )
+        self.cloud_primary = bool(
+            config.get("cloud_ocr", {}).get("primary", False)
+        )
 
     def process(self, image: np.ndarray, skip_quality: bool = False) -> VisionResult:
         if skip_quality:
@@ -35,11 +41,28 @@ class VisionPipeline:
         if not ok:
             return VisionResult(status="bad_quality", reason=reason)
 
-        boxes = self.detector.detect(image)
-        if boxes:
-            text, confidence = self._ocr_regions(image, boxes)
-        else:
-            text, confidence = self.ocr.run(image)
+        if self.cloud_primary and self.cloud.is_configured():
+            return self._process_cloud_first(image)
+
+        return self._process_local_first(image)
+
+    def _process_cloud_first(self, image: np.ndarray) -> VisionResult:
+        """Azure first: skip local OCR entirely if Azure succeeds."""
+        logger.info("Cloud-primary mode: calling Azure Read API")
+        cloud_result = self.cloud.run(image)
+        if cloud_result:
+            text, confidence = cloud_result
+            if text:
+                logger.info("Azure succeeded (confidence=%.1f)", confidence)
+                return VisionResult(status="ok", text=text, confidence=confidence)
+
+        # Azure failed or returned no text — fall back to local OCR
+        logger.warning("Azure returned no text, falling back to local OCR")
+        return self._run_local_ocr(image)
+
+    def _process_local_first(self, image: np.ndarray) -> VisionResult:
+        """Original behaviour: local OCR first, Azure as fallback."""
+        text, confidence = self._run_local_ocr_raw(image)
 
         if self.cloud.is_configured() and (
             not text or confidence < self.cloud_trigger_conf
@@ -50,8 +73,19 @@ class VisionPipeline:
 
         if not text:
             return VisionResult(status="no_text")
-
         return VisionResult(status="ok", text=text, confidence=confidence)
+
+    def _run_local_ocr(self, image: np.ndarray) -> VisionResult:
+        text, confidence = self._run_local_ocr_raw(image)
+        if not text:
+            return VisionResult(status="no_text")
+        return VisionResult(status="ok", text=text, confidence=confidence)
+
+    def _run_local_ocr_raw(self, image: np.ndarray) -> tuple[str, float]:
+        boxes = self.detector.detect(image)
+        if boxes:
+            return self._ocr_regions(image, boxes)
+        return self.ocr.run(image)
 
     def _ocr_regions(self, image: np.ndarray, boxes: List[Box]) -> tuple[str, float]:
         texts: List[str] = []
