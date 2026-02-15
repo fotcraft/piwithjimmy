@@ -84,10 +84,10 @@ class AzureReadOcr:
 
     def _build_url(self) -> str:
         base = self.endpoint.rstrip("/")
-        return (
-            f"{base}/vision/v3.2/read/analyze"
-            f"?language={self.language}&readingOrder={self.reading_order}"
-        )
+        params = f"readingOrder={self.reading_order}"
+        if self.language:
+            params = f"language={self.language}&{params}"
+        return f"{base}/vision/v3.2/read/analyze?{params}"
 
     _MAX_BYTES = 4 * 1024 * 1024  # Azure 4 MB limit
 
@@ -133,5 +133,8 @@ class AzureReadOcr:
             avg_conf = sum(confidences) / len(confidences)
         else:
             avg_conf = 0.9 if merged else 0.0
+        # Azure returns 0-1 confidence; normalize to 0-100 to match local OCR
+        if avg_conf <= 1.0:
+            avg_conf *= 100.0
         logger.info("Azure result: %d lines, avg_conf=%.2f", len(lines), avg_conf)
         return merged, avg_conf

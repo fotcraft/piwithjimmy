@@ -1,0 +1,21 @@
+STEP files still needed (require login to download)
+====================================================
+
+1. CM5 IO Board
+   https://grabcad.com/library/raspberry-pi-cm5io-board-1
+   -> Save as: cm5-io-board.step
+
+2. UPS HAT (Waveshare or similar)
+   https://grabcad.com/library/raspberry-pi-ups-hat-1
+   -> Save as: ups-hat.step
+
+3. 18650 Battery Holder
+   https://grabcad.com/library?sort=most_downloaded&tags=18650
+   or: https://www.digikey.com/en/models/3029216
+   -> Save as: 18650-battery-holder.step
+
+4. 18650 Battery Cell
+   https://grabcad.com/library/tag/18650
+   -> Save as: 18650-cell.step
+
+Login with your GrabCAD account (michalisfot17@gmail.com) to download.

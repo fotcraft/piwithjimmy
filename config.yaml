@@ -1,5 +1,5 @@
 device:
-  language_mode: en  # auto|el|en
+  language_mode: auto  # auto|el|en
   audio_volume: 85
 
 camera:
@@ -30,13 +30,21 @@ cloud_ocr:
   provider: "azure_read"
   endpoint: "https://craftsman.cognitiveservices.azure.com"
   key: ""  # set via AZURE_CV_KEY env var
-  language: "en"
+  language: ""  # empty = auto-detect
   reading_order: "basic"
   timeout_seconds: 15
   poll_interval_seconds: 0.5
   trigger_confidence: 40.0
 
 tts:
+  azure_enabled: true
+  azure_speech_key: ""  # set via AZURE_SPEECH_KEY env var
+  azure_region: "italynorth"
+  azure_voice_en: "en-US-JennyNeural"
+  azure_voice_el: "el-GR-AthinaNeural"
+  azure_audio_format: "riff-16khz-16bit-mono-pcm"
+  azure_timeout_seconds: 10
+  # espeak-ng fallback settings
   voice_en: "en-us"
   voice_el: "el"
   rate: 145

@@ -1,10 +1,16 @@
+import logging
 import os
 import queue
 import subprocess
+import tempfile
 import threading
 from typing import Any, Dict, Optional
 
+import requests
+
 from app.prompts.phrases import PROMPT_PHRASES
+
+logger = logging.getLogger(__name__)
 
 
 class AudioOutput:
@@ -16,6 +22,17 @@ class AudioOutput:
         device_cfg = config.get("device", {})
         self._volume = int(device_cfg.get("audio_volume", 85))
         tts_cfg = config.get("tts", {})
+
+        # Azure Neural TTS settings
+        self.azure_tts_enabled = bool(tts_cfg.get("azure_enabled", False))
+        self.azure_tts_key = tts_cfg.get("azure_speech_key", "") or os.getenv("AZURE_SPEECH_KEY", "")
+        self.azure_voice_en = tts_cfg.get("azure_voice_en", "en-US-JennyNeural")
+        self.azure_voice_el = tts_cfg.get("azure_voice_el", "el-GR-AthinaNeural")
+        self.azure_tts_region = tts_cfg.get("azure_region", "italynorth")
+        self.azure_audio_format = tts_cfg.get("azure_audio_format", "riff-16khz-16bit-mono-pcm")
+        self.azure_tts_timeout = float(tts_cfg.get("azure_timeout_seconds", 10))
+
+        # espeak-ng fallback settings
         self.voice_en = tts_cfg.get("voice_en", "en-us")
         self.voice_el = tts_cfg.get("voice_el", "el")
         self.tts_rate = int(tts_cfg.get("rate", 145))
@@ -69,9 +86,68 @@ class AudioOutput:
             self._speak(phrase, lang)
 
     def _play_wav(self, path: str) -> None:
-        subprocess.run(["aplay", path], check=False)
+        env = os.environ.copy()
+        env.setdefault("XDG_RUNTIME_DIR", f"/run/user/{os.getuid()}")
+        subprocess.run(["paplay", path], env=env, check=False)
 
     def _speak(self, text: str, lang: str) -> None:
+        if self._speak_azure(text, lang):
+            return
+        self._speak_espeak(text, lang)
+
+    def _speak_azure(self, text: str, lang: str) -> bool:
+        if not self.azure_tts_enabled or not self.azure_tts_key:
+            return False
+
+        voice = self.azure_voice_el if lang == "el" else self.azure_voice_en
+        xml_lang = "el-GR" if lang == "el" else "en-US"
+        ssml = (
+            f"<speak version='1.0' xml:lang='{xml_lang}'>"
+            f"<voice name='{voice}'>{text}</voice>"
+            f"</speak>"
+        )
+
+        url = f"https://{self.azure_tts_region}.tts.speech.microsoft.com/cognitiveservices/v1"
+        headers = {
+            "Ocp-Apim-Subscription-Key": self.azure_tts_key,
+            "Content-Type": "application/ssml+xml",
+            "X-Microsoft-OutputFormat": self.azure_audio_format,
+        }
+
+        try:
+            resp = requests.post(
+                url, headers=headers, data=ssml.encode("utf-8"),
+                timeout=self.azure_tts_timeout,
+            )
+        except requests.RequestException as exc:
+            logger.error("Azure TTS request failed: %s", exc)
+            return False
+
+        if resp.status_code != 200:
+            logger.error("Azure TTS HTTP %d: %s", resp.status_code, resp.text[:200])
+            return False
+
+        tmp = None
+        try:
+            with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as f:
+                f.write(resp.content)
+                tmp = f.name
+            # Ensure PulseAudio/PipeWire is reachable (needed for SSH sessions)
+            env = os.environ.copy()
+            env.setdefault("XDG_RUNTIME_DIR", f"/run/user/{os.getuid()}")
+            ret = subprocess.run(["paplay", tmp], env=env, check=False)
+            if ret.returncode != 0:
+                logger.warning("paplay failed (rc=%d), falling back to espeak", ret.returncode)
+                return False
+            return True
+        except Exception as exc:
+            logger.error("Azure TTS playback error: %s", exc)
+            return False
+        finally:
+            if tmp and os.path.exists(tmp):
+                os.unlink(tmp)
+
+    def _speak_espeak(self, text: str, lang: str) -> None:
         voice = self.voice_el if lang == "el" else self.voice_en
         amplitude = str(
             max(0, min(200, int(self.tts_amplitude * (self._volume / 100.0))))
