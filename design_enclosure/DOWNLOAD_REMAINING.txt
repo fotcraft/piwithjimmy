@@ -1,21 +1,28 @@
-STEP files still needed (require login to download)
-====================================================
+STEP files still needed — download from GrabCAD (michalisfot17@gmail.com)
+======================================================================
 
-1. CM5 IO Board
-   https://grabcad.com/library/raspberry-pi-cm5io-board-1
-   -> Save as: cm5-io-board.step
+1. Waveshare CM5-NANO-B carrier board
+   https://www.waveshare.com/wiki/CM5-NANO-B (check Resources section)
+   -> Save as: cm5-nano-b.step
 
-2. UPS HAT (Waveshare or similar)
-   https://grabcad.com/library/raspberry-pi-ups-hat-1
-   -> Save as: ups-hat.step
+2. MAX98357A I2S amplifier breakout
+   https://grabcad.com/library/max98357a-3w-i2s-amplifier-1
+   -> Save as: max98357a-amp.step
 
-3. 18650 Battery Holder
-   https://grabcad.com/library?sort=most_downloaded&tags=18650
-   or: https://www.digikey.com/en/models/3029216
-   -> Save as: 18650-battery-holder.step
+3. Speaker 4ohm 3W (40mm)
+   https://grabcad.com/library/speaker-4-ohm-3w-1
+   -> Save as: speaker-4ohm-3w.step
 
-4. 18650 Battery Cell
-   https://grabcad.com/library/tag/18650
-   -> Save as: 18650-cell.step
+4. 12mm tactile push button
+   https://grabcad.com/library/12mm-push-button-and-cap-1
+   -> Save as: push-button-12mm.step
 
-Login with your GrabCAD account (michalisfot17@gmail.com) to download.
+5. 3000mAh LiPo pouch battery
+   https://grabcad.com/library/makerfocus-3000mah-lipo-battery-1
+   -> Save as: lipo-3000mah.step
+
+Already downloaded:
+  - CM5R5-3dsteps.step (Compute Module 5)
+  - Camera_module_3_std_model_simple.stp (Camera Module 3)
+  - Camera_module_3_wide_model_simple.stp (Camera Module 3 wide)
+  - PowerBoost_1000C.step (Adafruit PowerBoost 1000C)
