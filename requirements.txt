@@ -1,6 +1,12 @@
 pyyaml>=6.0
 numpy>=1.24
-opencv-python>=4.8
+opencv-python-headless>=4.8
 pytesseract>=0.3.10
-easyocr>=1.7.1
 requests>=2.31
+# On the Pi, gpiozero + lgpio and picamera2 come from apt (see README):
+#   sudo apt install python3-gpiozero python3-lgpio python3-picamera2
+# Create the venv with --system-site-packages so it can see them.
+#
+# Optional local OCR engines (English only, heavy on a Pi):
+#   easyocr>=1.7.1    (pulls in torch)
+#   paddleocr

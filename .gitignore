@@ -4,3 +4,6 @@ __pycache__/
 data/
 assets/
 *.wav
+benchmark_results.csv
+.pytest_cache/
+*.env

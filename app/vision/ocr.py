@@ -1,9 +1,12 @@
+import logging
 import os
 from typing import Any, Dict, List, Tuple
 
 import cv2
 import numpy as np
 import pytesseract
+
+logger = logging.getLogger(__name__)
 
 
 class OcrEngine:
@@ -50,9 +53,16 @@ class OcrEngine:
 
     def _run_tesseract(self, image) -> Tuple[str, float]:
         image = self._preprocess(image)
-        data = pytesseract.image_to_data(
-            image, lang=self.langs, output_type=pytesseract.Output.DICT
-        )
+        try:
+            data = pytesseract.image_to_data(
+                image, lang=self.langs, output_type=pytesseract.Output.DICT
+            )
+        except pytesseract.TesseractError as exc:
+            # Usually a missing language pack (sudo apt install tesseract-ocr-ell).
+            logger.error("Tesseract failed with langs=%s (%s); retrying with eng", self.langs, exc)
+            data = pytesseract.image_to_data(
+                image, lang="eng", output_type=pytesseract.Output.DICT
+            )
         text = " ".join(word for word in data.get("text", []) if word).strip()
         confidences = [
             float(c)

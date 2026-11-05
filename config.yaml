@@ -1,11 +1,29 @@
 device:
-  language_mode: auto  # auto|el|en
-  audio_volume: 85
+  language_mode: auto     # auto|el|en (Language button cycles el -> en -> auto)
+  prompt_language: el     # language of the spoken prompts in auto mode
+  audio_volume: 70
+
+hardware:
+  enabled: true
+  # BCM pin numbers. Buttons wire between the pin and GND (internal pull-ups).
+  buttons:
+    enabled: true
+    hold_seconds: 1.5     # hold Repeat this long for spoken help
+    pins:
+      scan: 17            # large front button
+      repeat: 27
+      vol_up: 22
+      vol_down: 23
+      lang_toggle: 24
+    low_battery_pin: 26   # PowerBoost LBO via 1N4148 diode, see docs/WIRING.md
+  status_led_pin: 25      # front LED: steady = ready, blinking = working
+  illumination_pin: 16    # white LED next to the camera, on during capture
 
 camera:
-  width: 1280
-  height: 720
+  width: 2304
+  height: 1296
   warmup_ms: 300
+  autofocus: true
 
 quality:
   enabled: true
@@ -13,12 +31,15 @@ quality:
   min_brightness: 60.0
   max_brightness: 200.0
 
-ocr:
-  backend: "easyocr"  # easyocr|paddleocr|tesseract
+network:
+  check_before_cloud: true   # skip cloud calls instantly when offline
+
+ocr:                         # local, offline OCR
+  backend: "tesseract"       # tesseract|easyocr|paddleocr (only tesseract reads Greek)
   min_confidence: 55.0
-  preprocess: false
+  preprocess: true
   scale: 1.6
-  tesseract_langs: "eng"
+  tesseract_langs: "ell+eng" # needs: sudo apt install tesseract-ocr-ell
   easyocr_langs: ["en"]
   paddle_langs: ["en"]
   paddle_use_angle_cls: true
@@ -26,24 +47,40 @@ ocr:
 
 cloud_ocr:
   enabled: true
-  primary: true  # true = Azure first, local OCR fallback; false = local first
-  provider: "azure_read"
+  primary: true              # true = cloud first, local fallback
+  provider: "azure_read"     # azure_read | azure_docintel (lists Greek print)
   endpoint: "https://craftsman.cognitiveservices.azure.com"
-  key: ""  # set via AZURE_CV_KEY env var
-  language: ""  # empty = auto-detect
-  reading_order: "basic"
-  timeout_seconds: 15
-  poll_interval_seconds: 0.5
-  trigger_confidence: 40.0
+  key: ""                    # set via AZURE_CV_KEY env var
+  language: ""               # empty = auto-detect
+  reading_order: "natural"
+  timeout_seconds: 10
+  poll_interval_seconds: 0.4
+  trigger_confidence: 40.0   # local_first mode only
+
+vlm:                         # vision-language model, reads Greek handwriting
+  enabled: true
+  provider: "azure_openai"   # azure_openai | openai | anthropic
+  endpoint: ""               # azure_openai only, e.g. https://<resource>.openai.azure.com
+  deployment: ""             # azure_openai only: name of a vision-capable deployment
+  api_version: "2024-10-21"
+  model: ""                  # openai / anthropic only
+  key: ""                    # or env: AZURE_OPENAI_KEY / OPENAI_API_KEY / ANTHROPIC_API_KEY
+  trigger_confidence: 70.0   # use the VLM when Azure is less confident than this
+  on_handwriting: true       # use the VLM when Azure reports handwriting
+  assumed_confidence: 80.0
+  timeout_seconds: 20
+  max_image_side: 1600
 
 tts:
   azure_enabled: true
-  azure_speech_key: ""  # set via AZURE_SPEECH_KEY env var
+  azure_speech_key: ""       # set via AZURE_SPEECH_KEY env var
   azure_region: "italynorth"
   azure_voice_en: "en-US-JennyNeural"
   azure_voice_el: "el-GR-AthinaNeural"
   azure_audio_format: "riff-16khz-16bit-mono-pcm"
   azure_timeout_seconds: 10
+  azure_rate: "-5%"          # slightly slower than default; "" for normal
+  cache_dir: "data/tts_cache"
   # espeak-ng fallback settings
   voice_en: "en-us"
   voice_el: "el"
@@ -57,11 +94,4 @@ storage:
 
 prompts:
   base_dir: "assets/prompts"
-  map:
-    capturing: "capturing"
-    reading: "reading"
-    too_dark: "too_dark"
-    too_blurry: "too_blurry"
-    no_text: "no_text"
-    not_sure: "not_sure"
-    camera_error: "camera_error"
+  map: {}
