@@ -7,6 +7,7 @@ from app.hal.buttons import ButtonEvent, Buttons
 from app.hal.camera import Camera
 from app.hal.fuel_gauge import FuelGauge
 from app.hal.leds import Leds
+from app import net, wifi_qr
 from app.language.detect import detect_language
 from app.language.normalize import normalize_text
 from app.storage.last_result import LastResultStore
@@ -34,6 +35,7 @@ class Orchestrator:
         self.vision = VisionPipeline(config)
         self.storage = LastResultStore(config.get("storage", {}))
         self.gauge = FuelGauge(hw.get("fuel_gauge", {}))
+        self.wifi_cfg = config.get("wifi_qr", {}) or {}
 
         self.language_override = self.device_cfg.get("language_mode", "auto")
         self.prompt_language = self.device_cfg.get("prompt_language", "el")
@@ -85,6 +87,11 @@ class Orchestrator:
             if image is None:
                 self.audio.play_prompt("camera_error", self._prompt_lang())
                 return
+            if self.wifi_cfg.get("enabled", True):
+                creds = wifi_qr.find_wifi_qr(image)
+                if creds:
+                    self.handle_wifi_qr(creds)
+                    return
             result = self._run_vision(image)
             if result:
                 self._speak_result(result)
@@ -96,6 +103,35 @@ class Orchestrator:
         if result:
             self._speak_result(result)
         return result
+
+    def handle_wifi_qr(self, creds: "wifi_qr.WifiCredentials") -> bool:
+        """Read the network name aloud, wait for Scan to confirm, then join."""
+        lang = self._prompt_lang()
+        if not creds.supported:
+            self.audio.play_prompt("wifi_unsupported", lang)
+            return False
+        self.audio.play_prompt("wifi_found", lang)
+        self.audio.speak_text(_speakable_ssid(creds.ssid), lang)
+        self.audio.play_prompt("wifi_confirm", lang)
+        event = self._wait_for_button(float(self.wifi_cfg.get("confirm_timeout_seconds", 20)))
+        self.audio.stop()
+        if event != ButtonEvent.SCAN:
+            self.audio.play_prompt("wifi_cancelled", lang)
+            return False
+        self.audio.play_prompt("wifi_connecting", lang)
+        ok = wifi_qr.join(creds, timeout=float(self.wifi_cfg.get("connect_timeout_seconds", 45)))
+        net.reset_cache()  # forget "offline" results from before the connection
+        self.audio.stop()
+        self.audio.play_prompt("wifi_connected" if ok else "wifi_failed", lang)
+        return ok
+
+    def _wait_for_button(self, timeout: float) -> Optional[ButtonEvent]:
+        deadline = time.monotonic() + timeout
+        while time.monotonic() < deadline:
+            event = self.buttons.wait(timeout=0.1)
+            if event is not None and event != ButtonEvent.LOW_BATTERY:
+                return event
+        return None
 
     def handle_repeat(self) -> None:
         last = self.storage.load()
@@ -197,3 +233,8 @@ class Orchestrator:
         self.buttons.close()
         self.camera.close()
         self.gauge.close()
+
+
+def _speakable_ssid(ssid: str) -> str:
+    """Network names often use _ and - as spaces; read them as words."""
+    return " ".join(ssid.replace("_", " ").replace("-", " ").split()) or ssid

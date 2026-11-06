@@ -21,6 +21,8 @@ Controls
 - Language: Greek -> English -> automatic (announced out loud)
 - Any button while reading stops the speech
 - Says "Battery low" when the PowerBoost LBO signal drops
+- Hold Language: battery level (with the IO board's fuel gauge)
+- Wi-Fi: scan a Wi-Fi QR code, then press the big button to confirm (docs/WIFI_SETUP.md)
 
 Hardware
 - Raspberry Pi Compute Module 5 (2GB RAM, 16GB eMMC, Wi-Fi)
@@ -56,6 +58,7 @@ Install (on the device)
    python3 main.py --warm-cache     # pre-synthesise prompts for offline use
 
 5) Start at boot: see deploy/readable.service
+   Wi-Fi by QR code also needs: sudo cp deploy/50-readable-wifi.rules /etc/polkit-1/rules.d/
 
 Testing
    pip install -r requirements-dev.txt

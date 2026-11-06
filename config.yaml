@@ -36,6 +36,11 @@ quality:
   min_brightness: 60.0
   max_brightness: 200.0
 
+wifi_qr:                     # join Wi-Fi by scanning a Wi-Fi QR code (docs/WIFI_SETUP.md)
+  enabled: true
+  confirm_timeout_seconds: 20
+  connect_timeout_seconds: 45
+
 network:
   check_before_cloud: true   # skip cloud calls instantly when offline
 
