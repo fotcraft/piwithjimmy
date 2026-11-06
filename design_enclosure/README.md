@@ -12,6 +12,8 @@ STEP files in this folder. Fully parametric: `readable_enclosure.py`.
 | `out/front.stl`, `out/back.stl` | The two shell halves, ready to slice |
 | `out/cap_scan.stl` | Large Scan button cap (raised ring + centre dot) |
 | `out/cap_repeat.stl`, `cap_vol_up`, `cap_vol_down`, `cap_lang` | Side button caps |
+| `out/camera_bezel.stl` | Charcoal camera island over the lens and the illumination LED |
+| `out/camera_window.step` | Outline of the clear window for laser cutting (0.8 mm acrylic) |
 | `out/*.step` | Same parts as STEP, for Rhino / Fusion |
 | `out/readable_assembly.step` | Shells, caps and simple parts placed together (the vendor board models are left out to keep it small; see `components()` in the script for where each goes) |
 | `readable_enclosure.py` | The parametric model, with an interference check |
@@ -36,8 +38,8 @@ Back face (z = 0) faces the page; the front face carries the controls.
 - **+Y side:** four 8 mm side buttons, told apart by touch:
   Repeat (round), Volume + (raised dot), Volume − (raised bar), Language (square).
 - **−Y side:** USB-C charging port, power slide switch.
-- **Back:** camera window, white illumination LED, six vents under the CM5,
-  five screw holes.
+- **Back:** a charcoal camera island (like a phone's) covering the lens and the
+  white illumination LED behind one clear window; six vents under the CM5; five screw holes.
 - **−X end:** lanyard slot with an internal post to tie the cord around.
 
 Inside, back to front: Camera Module 3 and PowerBoost on standoffs; CM5 under
@@ -52,7 +54,11 @@ ring over the carrier; amplifier beside the speaker.
   **back face down**. No supports needed for either, apart from the side-button
   holes, which bridge fine at 8 mm.
 - 0.2 mm layers, 4 walls (the 2.2 mm walls are then solid), 20 % infill.
-- Caps: print top face down for a smooth touch surface.
+- Button caps: **TPU, Shore 85A–95A** (soft rubber feel; the flange also seals
+  out dust). Print slowly (~20 mm/s), top face down, 100 % infill.
+- Camera island: black PETG, outer face down.
+- Camera window: laser-cut from 0.8 mm clear acrylic (use `camera_window.step`
+  as the outline), glued into the island with a thin bead of clear UV glue.
 
 ## Hardware
 
@@ -68,6 +74,7 @@ ring over the carrier; amplifier beside the speaker.
 | USB-C panel breakout, ≤ 12 × 12 mm | 1 |
 | 3 mm LED (status), 5 mm white LED (illumination) | 1 + 1 |
 | 40 mm 4 Ω 3 W speaker, ≤ 6 mm deep | 1 |
+| 0.8 mm clear acrylic (camera window) | 1 |
 | LiPo cell, ≤ 50 × 50 × 9 mm | 1 |
 | Foam tape for the cell | |
 
@@ -76,8 +83,9 @@ Wiring: `../docs/WIRING.md`.
 ## Assembly
 
 1. Press the heat-set inserts into the five front-shell bosses (soldering iron, ~230 °C).
-2. Back shell: screw the camera (lens through the window) and PowerBoost onto
-   their standoffs; push the 5 mm LED into its hole from inside and glue.
+2. Back shell: glue the window into the camera island and press the island into
+   its pocket on the back face. Screw the camera (lens through the square opening)
+   and PowerBoost onto their standoffs; push the 5 mm LED into its hole from inside and glue.
 3. Mount the CM5 on the carrier, then the stack onto the four CM5 standoffs.
 4. Front shell: drop the caps into their holes from inside, then fit the
    switches behind them (Scan switch on the tube floor, side switches in their
@@ -85,6 +93,13 @@ Wiring: `../docs/WIRING.md`.
    USB-C breakout and slide switch into their cradles, the status LED into its tube.
 5. Wire per `docs/WIRING.md`. Stick the cell over the camera / PowerBoost with foam tape.
 6. Close: the lip on the front shell locates in the back shell; five M2.5 × 10 screws from the back.
+
+## Outdoor version (optional, not yet modelled)
+
+An optional 4G variant for people without home Wi-Fi or for use outside (pharmacy,
+doctor, supermarket): a 4G LTE modem with a nano-SIM slot on the −Y side.
+The standard version stays Wi-Fi only. Before modelling it, pick the modem board
+(size, power draw) and a power board that can supply its peaks.
 
 ## Check before printing the final version
 
