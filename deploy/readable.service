@@ -1,0 +1,29 @@
+# systemd *user* service: starts Readable at boot, restarts it if it crashes.
+# A user service is used because audio (PipeWire) runs per user.
+#
+# Install (as the user that runs the device, e.g. "pi"):
+#   mkdir -p ~/.config/systemd/user ~/.config/readable
+#   cp deploy/readable.service ~/.config/systemd/user/
+#   cp deploy/readable.env.example ~/.config/readable/readable.env   # then add your keys
+#   chmod 600 ~/.config/readable/readable.env
+#   systemctl --user daemon-reload
+#   systemctl --user enable --now readable
+#   sudo loginctl enable-linger $USER     # start at boot without a login
+#
+# Logs: journalctl --user -u readable -f
+
+[Unit]
+Description=Readable handheld text reader
+After=network-online.target sound.target pipewire.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=%h/piwithjimmy
+EnvironmentFile=%h/.config/readable/readable.env
+ExecStart=%h/piwithjimmy/.venv/bin/python3 main.py --config config.yaml
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=default.target

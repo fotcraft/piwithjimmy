@@ -1,90 +1,89 @@
-piwithjimmy - Portable Text Reader
+Readable - Portable Text Reader (piwithjimmy)
 
-A portable text reader powered by Raspberry Pi and Azure AI.
-Captures handwritten or printed notes with a camera, reads them aloud
-using Azure Computer Vision (OCR) and Azure Neural Text-to-Speech.
+A handheld reader for blind and visually impaired people, built on a
+Raspberry Pi Compute Module 5. Press the big button: it photographs the page
+and reads it aloud in Greek or English.
 
-Features
-- Azure Read API as primary OCR (handwriting + printed text)
-- Azure Neural TTS (en-US-JennyNeural / el-GR-AthinaNeural)
-- Auto language detection (English + Greek)
-- Local OCR fallback (EasyOCR/Tesseract) when Azure is unavailable
-- espeak-ng TTS fallback when Azure Speech is unavailable
-- Scan/Repeat/Volume/Language buttons via GPIO
-- Camera capture via picamera2
-- Image quality checks (blur/exposure)
-- Last-result storage for Repeat
+How it reads
+1. Camera Module 3 photo, with autofocus and an illumination LED.
+2. Quality check: tells the user out loud if the photo is blurry, too dark or too bright.
+3. Azure OCR (Read API, or Document Intelligence with provider: azure_docintel).
+4. Handwriting (Greek in particular), low confidence or no text: a vision-language
+   model (Azure OpenAI, OpenAI or Anthropic; see vlm in config.yaml).
+5. Offline: local Tesseract (Greek + English print) and espeak-ng voice.
+6. Azure Neural TTS (el-GR-AthinaNeural / en-US-JennyNeural). Spoken prompts
+   are cached on disk, so they keep the natural voice offline.
 
-Hardware (target build)
-- Raspberry Pi Compute Module 5 (2GB RAM, 16GB eMMC, WiFi)
+Controls
+- Big front button: scan and read
+- Repeat: read the last text again (hold for spoken help)
+- Volume + / -: spoken volume level
+- Language: Greek -> English -> automatic (announced out loud)
+- Any button while reading stops the speech
+- Says "Battery low" when the PowerBoost LBO signal drops
+
+Hardware
+- Raspberry Pi Compute Module 5 (2GB RAM, 16GB eMMC, Wi-Fi)
 - Waveshare CM5-NANO-B carrier board
 - Raspberry Pi Camera Module 3 (autofocus)
-- MAX98357A I2S amplifier + 3W 4ohm speaker
-- Adafruit PowerBoost 1000C + 3.7V 3000mAh LiPo battery
-- 5x tactile push buttons + status LED
+- MAX98357A I2S amplifier + 3W 4ohm 40mm speaker
+- Adafruit PowerBoost 1000C + 3.7V LiPo
+- 1 large + 4 small tactile buttons, status LED, white illumination LED
+- 3D-printed enclosure: design_enclosure/
+Wiring and pin map: docs/WIRING.md
 
-Quick start
+Install (on the device)
 
-1) Install system dependencies:
-   sudo apt-get update
-   sudo apt-get install -y python3-picamera2 python3-opencv tesseract-ocr espeak-ng
+1) System packages:
+   sudo apt update
+   sudo apt install -y python3-picamera2 python3-gpiozero python3-lgpio \
+       python3-opencv tesseract-ocr tesseract-ocr-ell espeak-ng pulseaudio-utils
 
-2) Python deps:
-   python3 -m venv .venv
+2) Python environment:
+   python3 -m venv --system-site-packages .venv
    source .venv/bin/activate
-   pip install --upgrade pip
    pip install -r requirements.txt
 
-3) Set Azure credentials:
-   export AZURE_CV_KEY="your-computer-vision-key"
-   export AZURE_SPEECH_KEY="your-speech-service-key"
-
-   Azure resources needed:
-   - Computer Vision (for OCR) - endpoint configured in config.yaml
-   - Speech Service (for TTS) - region configured in config.yaml
+3) Keys (never commit them):
+   cp deploy/readable.env.example ~/.config/readable/readable.env  (then edit)
+   Azure resources: Computer Vision (OCR), Speech (TTS), and for handwriting an
+   Azure OpenAI vision deployment (or an OpenAI / Anthropic key).
 
 4) Run:
-   python3 main.py --config config.yaml
+   python3 main.py                  # normal operation (GPIO buttons)
+   python3 main.py --keys           # simulate buttons from the keyboard
+   python3 main.py --image page.jpg # pipeline on a photo, no camera
+   python3 main.py --warm-cache     # pre-synthesise prompts for offline use
 
-Testing without a camera
-   python3 main.py --image /path/to/test.jpg
+5) Start at boot: see deploy/readable.service
 
-Configuration (config.yaml)
-- device.language_mode: auto|en|el (default: auto)
-- cloud_ocr.enabled: true/false (Azure Read API)
-- cloud_ocr.primary: true/false (Azure-first vs local-first)
-- tts.azure_enabled: true/false (Azure Neural TTS)
-- tts.azure_region: Azure Speech Service region (e.g. italynorth)
-- ocr.preprocess: false recommended for handwriting
+Testing
+   pip install -r requirements-dev.txt
+   python3 -m pytest                # unit tests, no hardware or keys needed
+
+Measuring accuracy
+   python3 tools/benchmark.py bench/   # photos + ground-truth .txt per category
+   Reports accuracy (1 - character error rate), time per scan and which engine
+   answered. See the docstring in tools/benchmark.py for the folder layout.
 
 Project structure
-   config.yaml          - All configuration
-   main.py              - Entry point (--image, --once, --config)
-   app/
-     orchestrator.py    - Main scan/repeat/speak flow
-     vision/
-       pipeline.py      - Azure-first or local-first OCR pipeline
-       cloud_ocr.py     - Azure Read API client
-       ocr.py           - Local OCR (EasyOCR/Tesseract/PaddleOCR)
-       quality.py       - Blur/exposure checks
-       text_detector.py - Text region detection (stub for TPU)
-     hal/
-       audio.py         - Azure Neural TTS + espeak-ng fallback
-       buttons.py       - GPIO button input (stub)
-       camera.py        - picamera2 capture
-       leds.py          - Status LED (stub)
-     language/
-       detect.py        - Greek/English detection
-       normalize.py     - Text normalization
-     prompts/
-       phrases.py       - UI prompt phrases
-     storage/
-       last_result.py   - Last-result persistence
-   design_enclosure/    - STEP/CAD files for enclosure design
+   main.py                 Entry point
+   config.yaml             All settings
+   app/orchestrator.py     Buttons -> scan -> speak flow
+   app/net.py              Fast offline detection
+   app/vision/pipeline.py  Engine routing (Azure -> VLM -> local)
+   app/vision/cloud_ocr.py Azure Read / Document Intelligence
+   app/vision/vlm_ocr.py   Vision-language model OCR (handwriting)
+   app/vision/ocr.py       Local OCR (Tesseract)
+   app/hal/                Camera, audio, buttons, LEDs
+   app/prompts/phrases.py  Spoken prompts (Greek, English)
+   tools/                  Benchmark and debug scripts
+   tests/                  Unit tests
+   deploy/                 systemd service, env template
+   docs/WIRING.md          Pin map and wiring
+   design_enclosure/       Enclosure CAD (parametric) and component models
 
 Notes
-- GPIO wiring is stubbed. Replace app/hal/buttons.py and
-  app/hal/leds.py with your actual GPIO logic.
-- Azure handwriting recognition works best for English.
-  Greek works well for printed text.
-- Audio uses paplay (PipeWire/PulseAudio) for WAV playback.
+- Azure handwriting OCR covers 9 languages, not Greek; the VLM handles Greek handwriting.
+- Microsoft lists Greek print for Document Intelligence Read but not for the
+  Vision Read API. If Greek print is weak, set cloud_ocr.provider: azure_docintel.
