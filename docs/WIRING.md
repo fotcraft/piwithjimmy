@@ -1,5 +1,9 @@
 # Readable wiring
 
+This page covers the prototype built from modules (PowerBoost, MAX98357A
+breakout). For the production build, the custom IO board replaces the power,
+audio and page-light wiring: see `IO_BOARD.md`.
+
 All GPIO numbers are BCM. Pins are configurable in `config.yaml` (`hardware`).
 
 ## Pin map

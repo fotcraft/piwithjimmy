@@ -16,6 +16,7 @@ KEYMAP = {
     "l": ButtonEvent.LANG_TOGGLE,
     "h": ButtonEvent.HELP,
     "b": ButtonEvent.LOW_BATTERY,
+    "p": ButtonEvent.BATTERY,
 }
 
 
@@ -39,7 +40,7 @@ def parse_args() -> argparse.Namespace:
 
 
 def _keyboard_loop(app: Orchestrator) -> None:
-    print("Keys: s=scan r=repeat +=vol up -=vol down l=language h=help b=low battery, Enter after each")
+    print("Keys: s=scan r=repeat +=vol up -=vol down l=language h=help p=battery b=low battery, Enter after each")
     for line in sys.stdin:
         for ch in line.strip():
             event = KEYMAP.get(ch)

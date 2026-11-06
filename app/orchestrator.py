@@ -5,6 +5,7 @@ from typing import Any, Dict, Optional
 from app.hal.audio import AudioOutput
 from app.hal.buttons import ButtonEvent, Buttons
 from app.hal.camera import Camera
+from app.hal.fuel_gauge import FuelGauge
 from app.hal.leds import Leds
 from app.language.detect import detect_language
 from app.language.normalize import normalize_text
@@ -16,6 +17,7 @@ logger = logging.getLogger(__name__)
 LANG_CYCLE = {"el": "en", "en": "auto", "auto": "el"}
 QUALITY_PROMPTS = {"blur": "too_blurry", "dark": "too_dark", "bright": "too_bright"}
 LOW_BATTERY_REPEAT_S = 600
+BATTERY_POLL_S = 60
 
 
 class Orchestrator:
@@ -31,11 +33,13 @@ class Orchestrator:
         self.audio = AudioOutput(config)
         self.vision = VisionPipeline(config)
         self.storage = LastResultStore(config.get("storage", {}))
+        self.gauge = FuelGauge(hw.get("fuel_gauge", {}))
 
         self.language_override = self.device_cfg.get("language_mode", "auto")
         self.prompt_language = self.device_cfg.get("prompt_language", "el")
         self._last_lang: Optional[str] = None
         self._last_low_battery = 0.0
+        self._last_battery_poll = 0.0
 
     # ----------------------------------------------------------------- loop
     def run(self) -> None:
@@ -44,6 +48,8 @@ class Orchestrator:
             event = self.buttons.wait(timeout=0.1)
             if event is not None:
                 self.handle_event(event)
+            else:
+                self._poll_battery()
 
     def handle_event(self, event: ButtonEvent) -> None:
         logger.info("Button: %s", event.value)
@@ -67,6 +73,8 @@ class Orchestrator:
             self._toggle_language()
         elif event == ButtonEvent.HELP:
             self.audio.play_prompt("help", self._prompt_lang())
+        elif event == ButtonEvent.BATTERY:
+            self._announce_battery()
 
     # ------------------------------------------------------------- actions
     def handle_scan(self) -> None:
@@ -105,6 +113,25 @@ class Orchestrator:
         if self.language_override in ("el", "en"):
             self.prompt_language = self.language_override
         self.audio.play_prompt(f"lang_{self.language_override}", self._prompt_lang())
+
+    def _announce_battery(self) -> None:
+        pct = self.gauge.percent()
+        if pct is None:
+            self.audio.play_prompt("battery_unknown", self._prompt_lang())
+            return
+        rate = self.gauge.charge_rate()
+        key = "battery_charging" if rate is not None and rate > 0.5 else "battery"
+        self.audio.play_prompt(key, self._prompt_lang(), n=int(round(pct)))
+
+    def _poll_battery(self) -> None:
+        if not self.gauge.available():
+            return
+        now = time.monotonic()
+        if self._last_battery_poll and now - self._last_battery_poll < BATTERY_POLL_S:
+            return
+        self._last_battery_poll = now
+        if self.gauge.is_low() and not self.audio.is_busy():
+            self._announce_low_battery()
 
     def _announce_low_battery(self) -> None:
         now = time.monotonic()
@@ -169,3 +196,4 @@ class Orchestrator:
     def close(self) -> None:
         self.buttons.close()
         self.camera.close()
+        self.gauge.close()

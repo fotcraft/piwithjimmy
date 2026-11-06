@@ -1,7 +1,11 @@
 """Physical buttons and the PowerBoost low-battery signal, via gpiozero.
 
 Layout: one large Scan button on the front, four small side buttons
-(Repeat, Volume +, Volume -, Language). Holding Repeat speaks the help text.
+(Repeat, Volume +, Volume -, Language). Holding Repeat speaks the help text;
+holding Language speaks the battery level.
+
+The low-battery input is active-low: the PowerBoost LBO pin, or the MAX17048
+ALRT pin on the IO board.
 
 All buttons wire between a GPIO pin and GND; the internal pull-ups are used.
 Pin numbers are BCM and are set in config.yaml (hardware.buttons).
@@ -25,11 +29,15 @@ class ButtonEvent(str, Enum):
     VOL_DOWN = "vol_down"
     LANG_TOGGLE = "lang_toggle"
     HELP = "help"
+    BATTERY = "battery"
     LOW_BATTERY = "low_battery"
 
 
 # Which button produces which event when held instead of pressed.
-HOLD_EVENTS = {ButtonEvent.REPEAT: ButtonEvent.HELP}
+HOLD_EVENTS = {
+    ButtonEvent.REPEAT: ButtonEvent.HELP,
+    ButtonEvent.LANG_TOGGLE: ButtonEvent.BATTERY,
+}
 
 
 class Buttons:

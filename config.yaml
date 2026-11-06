@@ -15,9 +15,14 @@ hardware:
       vol_up: 22
       vol_down: 23
       lang_toggle: 24
-    low_battery_pin: 26   # PowerBoost LBO via 1N4148 diode, see docs/WIRING.md
+    low_battery_pin: 26   # PowerBoost LBO via BAT85 diode (docs/WIRING.md); IO board: MAX17048 ALRT, direct
   status_led_pin: 25      # front LED: steady = ready, blinking = working
   illumination_pin: 16    # white LED next to the camera, on during capture
+  fuel_gauge:             # MAX17048 on the IO board (docs/IO_BOARD.md); hold Language = battery %
+    enabled: false        # true on the IO board build; needs dtparam=i2c_arm=on
+    i2c_bus: 1
+    address: 0x36
+    low_percent: 10       # say "battery low" at or below this
 
 camera:
   width: 2304
