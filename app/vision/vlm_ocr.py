@@ -43,6 +43,11 @@ _DEFAULT_KEY_ENV = {
 }
 
 
+def _is_param_error(text: str) -> bool:
+    t = text.lower()
+    return "max_tokens" in t or "temperature" in t or "unsupported_parameter" in t
+
+
 class VlmOcr:
     def __init__(self, config: Dict[str, Any]) -> None:
         self.enabled = bool(config.get("enabled", False))
@@ -126,6 +131,12 @@ class VlmOcr:
             headers = {"Authorization": f"Bearer {self.key}", "Content-Type": "application/json"}
             body["model"] = self.model
         resp = requests.post(url, headers=headers, json=body, timeout=self.timeout)
+        if resp.status_code == 400 and _is_param_error(resp.text):
+            # Reasoning models (GPT-5 family, o-series) reject max_tokens and
+            # temperature; retry with the parameters they accept.
+            body.pop("temperature", None)
+            body["max_completion_tokens"] = body.pop("max_tokens", self.max_tokens)
+            resp = requests.post(url, headers=headers, json=body, timeout=self.timeout)
         if resp.status_code != 200:
             logger.error("VLM OCR HTTP %d: %s", resp.status_code, resp.text[:200])
             return None

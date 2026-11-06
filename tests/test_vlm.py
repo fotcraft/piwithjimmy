@@ -61,3 +61,20 @@ def test_http_error_returns_none(monkeypatch):
     monkeypatch.setattr(vlm_ocr.requests, "post", lambda *a, **k: FakeResp(429, {"error": "rate"}))
     v = VlmOcr({"enabled": True, "provider": "openai", "key": "k", "model": "m"})
     assert v.run(IMG) is None
+
+
+def test_reasoning_model_param_retry(monkeypatch):
+    calls = []
+
+    def fake_post(url, headers=None, json=None, timeout=None):
+        calls.append(dict(json))
+        if "max_tokens" in json:
+            return FakeResp(400, {"error": {"code": "unsupported_parameter",
+                                            "message": "Unsupported parameter: 'max_tokens'"}})
+        return FakeResp(200, {"choices": [{"message": {"content": "Γεια"}}]})
+
+    monkeypatch.setattr(vlm_ocr.requests, "post", fake_post)
+    v = VlmOcr({"enabled": True, "provider": "azure_openai", "key": "k",
+                "endpoint": "https://r.openai.azure.com", "deployment": "gpt-5-mini"})
+    assert v.run(IMG).text == "Γεια"
+    assert "max_completion_tokens" in calls[1] and "temperature" not in calls[1]
