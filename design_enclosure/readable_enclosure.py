@@ -51,7 +51,7 @@ CM5_STACK_GAP = 0.4              # carrier underside to CM5 connector face
 CAM_X0, CAM_Y0, CAM_Z = -33.0, 0.6, 8.1   # camera STEP origin; lens tip ~0.4 above back face
 PB_X0, PB_Y0, PB_Z = -46.0, -24.0, 3.7    # PowerBoost 1000C origin (bottom of PCB)
 BATT = dict(x0=-54.0, y0=-25.0, z0=11.0, lx=50.0, ly=50.0, lz=9.0)   # LiPo, set to your cell
-SPK = dict(x=28.0, y=0.0, d=40.0, h=6.0)                             # 40 mm 3 W speaker
+SPK = dict(x=28.0, y=0.0, d=40.0, h=6.0)                             # 40 mm speaker, <= 6 mm deep (CMS-4049-28S is 4.9 mm)
 AMP = dict(x0=-8.0, y0=-34.0, lx=17.8, ly=19.3, z0=22.0, lz=4.0)     # MAX98357A breakout
 SCAN = dict(x=-29.0, y=0.0, cap_d=30.0, sw=12.0, sw_h=4.3)           # 12x12x4.3 tactile
 STATUS_LED = dict(x=-6.0, y=-9.0, d=3.0)
@@ -236,15 +236,15 @@ def build():
     for hx, hy in CAM_HOLES:
         x, y = CAM_X0 + hx, CAM_Y0 + hy
         b_add.append(cyl_z(x, y, WALL - 0.3, 4.5, cam_pcb_bottom - WALL + 0.3))
-        b_cut.append(cyl_z(x, y, 1.0, 1.8, cam_pcb_bottom))
+        b_cut.append(cyl_z(x, y, 1.0, 1.7, cam_pcb_bottom))       # M2 machine screw cuts its own thread
     for hx, hy in PB_HOLES:
         x, y = PB_X0 + hx, PB_Y0 + hy
         b_add.append(cyl_z(x, y, WALL - 0.3, 4.5, PB_Z - WALL + 0.3))
-        b_cut.append(cyl_z(x, y, 1.0, 2.0, PB_Z))
+        b_cut.append(cyl_z(x, y, 1.0, 2.1, PB_Z))                 # M2.5 x 4 (PowerBoost holes are 2.5 mm)
     for hx, hy in CM5_HOLES:
         x, y = BOARD_X0 + hx, 19.5 - hy
         b_add.append(cyl_z(x, y, WALL - 0.3, 5.0, cm5_pcb_bottom() - WALL + 0.3))
-        b_cut.append(cyl_z(x, y, 1.0, 2.2, cm5_pcb_bottom()))
+        b_cut.append(cyl_z(x, y, 1.0, 2.1, cm5_pcb_bottom()))     # M2.5 x 8
 
     # ---- front shell: scan button
     f_cut.append(cyl_z(SCAN["x"], SCAN["y"], top_inner - 0.5, SCAN["cap_d"] + 0.8, WALL + 2))

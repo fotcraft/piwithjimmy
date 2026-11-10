@@ -29,8 +29,13 @@ The buttons use the Pi's internal pull-ups, so no resistors are needed.
 ## Audio: MAX98357A I2S amplifier
 
 - Vin → 5 V, GND → GND, BCLK/LRC/DIN as above, speaker on the + / − terminals.
-- `/boot/firmware/config.txt`: add `dtoverlay=max98357a` and set `dtparam=audio=off`.
+- `/boot/firmware/config.txt`: add `dtoverlay=max98357a,no-sdmode` and set `dtparam=audio=off`.
+  (`no-sdmode` because the amplifier's SD pin is not wired to a GPIO; without it the
+  driver toggles GPIO4.)
 - Leave GAIN unconnected (9 dB). Tie it to GND for 12 dB if the voice is too quiet.
+- Speaker: 40 mm, 8 Ω 2 W (Same Sky CMS-4049-28S). It has spring contacts instead of
+  solder tags: tin the contacts and solder thin wires to them quickly, or press them
+  against two pads. Into 8 Ω the amplifier gives about 1.8 W, so it cannot overdrive it.
 
 ## Illumination LED
 
@@ -55,6 +60,11 @@ LBO is pulled up to the battery voltage (up to 4.2 V), which is too high for a
 - On/off: slide switch between PowerBoost EN and GND (EN low = off; charging still works).
 - Charging: USB-C panel breakout in the enclosure wall, wired to the PowerBoost
   USB 5 V / GND pads (the PowerBoost's own micro-USB stays inside).
+- **USB-C needs two 5.1 kΩ resistors**: one from CC1 to GND and one from CC2 to GND
+  on the breakout. Without them a USB-C to USB-C charger supplies no power (a USB-A
+  to USB-C cable still works). Skip this only if the breakout already has them fitted.
+- Use thicker wire (0.5 mm² / 20 AWG) for battery, 5 V and GND between the PowerBoost
+  and the header. The 28 AWG ribbon is for buttons, LEDs and I2S only.
 - **Check for brown-outs.** The PowerBoost 1000C is rated 1 A continuous; the
   CM5 can briefly draw more during Wi-Fi bursts and camera capture. After a few
   scans run `vcgencmd get_throttled`. Anything other than `throttled=0x0` means

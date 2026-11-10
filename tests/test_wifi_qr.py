@@ -2,7 +2,6 @@ import subprocess
 
 import cv2
 import numpy as np
-import pytest
 
 from app import wifi_qr
 from app.hal.buttons import ButtonEvent

@@ -28,7 +28,7 @@ Hardware
 - Raspberry Pi Compute Module 5 (2GB RAM, 16GB eMMC, Wi-Fi)
 - Waveshare CM5-NANO-B carrier board
 - Raspberry Pi Camera Module 3 (autofocus)
-- MAX98357A I2S amplifier + 3W 4ohm 40mm speaker
+- MAX98357A I2S amplifier + thin 40 mm speaker (8 ohm 2 W, 4.9 mm deep)
 - Adafruit PowerBoost 1000C + 3.7V LiPo
 - 1 large + 4 small tactile buttons, status LED, white illumination LED
 - 3D-printed enclosure: design_enclosure/

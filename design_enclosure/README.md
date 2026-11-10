@@ -66,17 +66,23 @@ ring over the carrier; amplifier beside the speaker.
 | --- | --- |
 | M2.5 × 10 mm screws (pan or button head) | 5 |
 | M2.5 heat-set inserts, OD 3.5–4.0 mm, 4–5 mm long | 5 |
-| M2.5 × 8 screws + 1.5 mm spacers for the CM5 / carrier stack | 4 |
-| M2 × 5 self-tapping screws (camera, PowerBoost) | 8 |
+| M2.5 × 8 screws + 1.5 mm of spacers (three 0.5 mm M2.5 washers each) for the CM5 / carrier stack | 4 |
+| M2 × 5 screws (camera) | 4 |
+| M2.5 × 4 screws (PowerBoost; its holes are 2.5 mm) | 4 |
 | 12 × 12 × 4.3 mm tactile switch (Scan) | 1 |
 | 6 × 6 × 5 mm tactile switches (side buttons) | 4 |
 | SS12D00 mini slide switch | 1 |
 | USB-C panel breakout, ≤ 12 × 12 mm | 1 |
 | 3 mm LED (status), 5 mm white LED (illumination) | 1 + 1 |
-| 40 mm 4 Ω 3 W speaker, ≤ 6 mm deep | 1 |
+| 40 mm speaker, ≤ 6 mm deep (ordered: Same Sky CMS-4049-28S, 8 Ω 2 W, 4.9 mm) | 1 |
 | 0.8 mm clear acrylic (camera window) | 1 |
 | LiPo cell, ≤ 50 × 50 × 9 mm | 1 |
 | Foam tape for the cell | |
+
+The camera, PowerBoost and CM5 screws are ordinary machine screws that cut their
+own thread in the printed standoffs (holes 1.7 mm for M2, 2.1 mm for M2.5). Drive
+them in once, gently; do not use longer screws than listed or they come out
+through the back.
 
 Wiring: `../docs/WIRING.md`.
 
