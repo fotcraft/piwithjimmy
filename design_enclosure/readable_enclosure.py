@@ -50,7 +50,7 @@ BOARD_PCB_TOP = 9.8              # z of carrier PCB top surface
 CM5_STACK_GAP = 0.4              # carrier underside to CM5 connector face
 CAM_X0, CAM_Y0, CAM_Z = -33.0, 0.6, 8.1   # camera STEP origin; lens tip ~0.4 above back face
 PB_X0, PB_Y0, PB_Z = -46.0, -24.0, 3.7    # PowerBoost 1000C origin (bottom of PCB)
-BATT = dict(x0=-54.0, y0=-25.0, z0=11.0, lx=50.0, ly=50.0, lz=9.0)   # LiPo, set to your cell
+BATT = dict(x0=-51.25, y0=-17.5, z0=11.5, lx=44.5, ly=35.0, lz=8.3)  # Akyga LP783442 1150 mAh incl. PCM (bay fits up to 50 x 50 x 9)
 SPK = dict(x=28.0, y=0.0, d=40.0, h=6.0)                             # 40 mm speaker, <= 6 mm deep (CMS-4049-28S is 4.9 mm)
 AMP = dict(x0=-8.0, y0=-34.0, lx=17.8, ly=19.3, z0=22.0, lz=4.0)     # MAX98357A breakout
 SCAN = dict(x=-29.0, y=0.0, cap_d=30.0, sw=12.0, sw_h=4.3)           # 12x12x4.3 tactile
@@ -66,7 +66,7 @@ SIDE_BUTTONS = [                 # on the +Y wall; shape = tactile cue for blind
     dict(name="vol_down", x=6.0, shape="bar"),
     dict(name="lang", x=28.0, shape="square"),
 ]
-USBC = dict(x=-20.0, z=16.0)     # USB-C panel breakout on the -Y wall
+USBC = dict(x=-20.0, z=16.0, w=20.4, d=14.2)   # Adafruit 4090 USB-C breakout on the -Y wall, connector centred on the long edge
 POWER_SW = dict(x=2.0, z=16.0)   # mini slide switch (SS12D00) on the -Y wall
 BOSSES = [(-22.0, 29.0), (44.0, 27.0), (-40.0, -28.5), (20.0, -28.0), (44.0, -27.0)]
 CM5_HOLES = [(3.5, 3.5), (51.5, 3.5), (3.5, 36.5), (51.5, 36.5)]
@@ -164,10 +164,13 @@ def components():
     for b in SIDE_BUTTONS:
         yr = side_ref(b["x"])
         c[f"sw_{b['name']}"] = box(b["x"] - 3, yr - 0.2 - 5.0, SIDE_Z - 3, 6, 5.0, 6)
-    yw = -min(inner_half_width(USBC["x"] - 6), inner_half_width(USBC["x"] + 6))
-    c["usbc_breakout"] = box(USBC["x"] - 6, yw + 0.3, USBC["z"] - 2.5, 12, 12, 5)
+    hw = USBC["w"] / 2
+    yw = -min(inner_half_width(USBC["x"] - hw), inner_half_width(USBC["x"] + hw))
+    c["usbc_breakout"] = box(USBC["x"] - hw, yw + 0.3, USBC["z"] - 2.5, USBC["w"], USBC["d"], 5)
     yw = -inner_half_width(POWER_SW["x"])
-    c["power_switch"] = box(POWER_SW["x"] - 4.3, yw + 0.3, POWER_SW["z"] - 1.8, 8.6, 3.6, 3.6)
+    # body sits 1 mm into a pocket in the wall so the 2 mm lever (SS-12D00G2)
+    # stands about 0.8 mm proud of the outside and can be felt and pushed
+    c["power_switch"] = box(POWER_SW["x"] - 4.3, yw - 1.0, POWER_SW["z"] - 1.8, 8.6, 3.6, 3.6)
     c["status_led"] = cyl_z(STATUS_LED["x"], STATUS_LED["y"], T - WALL - 4.5, STATUS_LED["d"], 4.5)
     c["illum_led"] = cyl_z(ILLUM_LED["x"], ILLUM_LED["y"], WALL, ILLUM_LED["d"], 8.6)
     return c
@@ -290,8 +293,9 @@ def build():
                  .translate((USBC["x"], yw - WALL - 3, USBC["z"])).val())
     yw = -inner_half_width(POWER_SW["x"])
     f_cut.append(box(POWER_SW["x"] - 2.6, yw - WALL - 3, POWER_SW["z"] - 1.1, 5.2, WALL + 4, 2.2))
-    for (cx, cz, wdt, hgt, dep) in [(USBC["x"], USBC["z"], 14.0, 7.0, 13.6),
-                                    (POWER_SW["x"], POWER_SW["z"], 10.8, 5.8, 5.0)]:
+    f_cut.append(box(POWER_SW["x"] - 4.5, yw - 1.05, POWER_SW["z"] - 2.0, 9.0, 1.6, 4.0))   # body pocket
+    for (cx, cz, wdt, hgt, dep) in [(USBC["x"], USBC["z"], USBC["w"] + 2.0, 7.0, USBC["d"] + 1.6),
+                                    (POWER_SW["x"], POWER_SW["z"], 10.8, 5.8, 3.8)]:
         yw = -min(inner_half_width(cx - wdt / 2), inner_half_width(cx + wdt / 2))
         # starts 2 mm inside the wall so it is always joined to it; back end is the stop
         cr = box(cx - wdt / 2, yw - 2.0, cz - hgt / 2, wdt, dep + 2.0, hgt)

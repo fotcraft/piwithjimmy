@@ -71,13 +71,13 @@ ring over the carrier; amplifier beside the speaker.
 | M2.5 × 4 screws (PowerBoost; its holes are 2.5 mm) | 4 |
 | 12 × 12 × 4.3 mm tactile switch (Scan) | 1 |
 | 6 × 6 × 5 mm tactile switches (side buttons) | 4 |
-| SS12D00 mini slide switch | 1 |
-| USB-C panel breakout, ≤ 12 × 12 mm | 1 |
+| SS-12D00G2 mini slide switch (2 mm lever; it sits in a wall pocket so the lever stands ~0.8 mm proud) | 1 |
+| USB-C breakout, Adafruit 4090 (20.4 × 14.2 mm, connector centred on the long edge) | 1 |
 | 3 mm LED (status), 5 mm white LED (illumination) | 1 + 1 |
 | 40 mm speaker, ≤ 6 mm deep (ordered: Same Sky CMS-4049-28S, 8 Ω 2 W, 4.9 mm) | 1 |
 | 0.8 mm clear acrylic (camera window) | 1 |
-| LiPo cell, ≤ 50 × 50 × 9 mm | 1 |
-| Foam tape for the cell | |
+| LiPo cell: Akyga LP783442, 1150 mAh, 44.5 × 35 × 8.3 mm (the bay takes up to 50 × 50 × 9; set `BATT` for a bigger cell) | 1 |
+| Double-sided foam tape (about 1 mm) under the cell | |
 
 The camera, PowerBoost and CM5 screws are ordinary machine screws that cut their
 own thread in the printed standoffs (holes 1.7 mm for M2, 2.1 mm for M2.5). Drive
