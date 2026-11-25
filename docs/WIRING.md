@@ -54,6 +54,21 @@ LBO is pulled up to the battery voltage (up to 4.2 V), which is too high for a
 - The internal pull-up holds GPIO26 high. When the battery drops below ~3.2 V,
   LBO pulls low, the diode conducts and the device says "Battery low".
 
+## Demo build (no battery)
+
+For a quick demo the PowerBoost, cell, slide switch, LEDs and low-battery diode can
+all be left out. The device then runs from a USB-C supply or power bank plugged
+into the case:
+
+- Adafruit 4090 USB-C breakout: 5.1 kΩ from CC1 to GND and from CC2 to GND (unless
+  it already measures about 5.1 kΩ), then VBUS → header pins 2 and 4, GND → pins 6 and 9.
+  Use two or three ribbon conductors in parallel for each.
+- Any USB-C supply or power bank that gives 5 V at 3 A works; the official 27 W
+  Raspberry Pi supply does.
+- Leave `low_battery_pin` as it is: with nothing connected the pull-up keeps it high,
+  so the device never says "battery low".
+- Buttons, camera, amplifier and speaker are wired as above.
+
 ## Power
 
 - LiPo → PowerBoost 1000C BAT. PowerBoost 5V/GND → header pins 2/4 and GND.
