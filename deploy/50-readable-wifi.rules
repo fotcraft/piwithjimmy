@@ -1,0 +1,10 @@
+// Lets the Readable service (a systemd user service, running without a desktop
+// login) add Wi-Fi networks through NetworkManager when a Wi-Fi QR code is scanned.
+// Install:  sudo cp deploy/50-readable-wifi.rules /etc/polkit-1/rules.d/
+// Applies to members of the "netdev" group (the default Raspberry Pi OS user is one).
+polkit.addRule(function (action, subject) {
+    if (action.id.indexOf("org.freedesktop.NetworkManager.") === 0 &&
+        subject.isInGroup("netdev")) {
+        return polkit.Result.YES;
+    }
+});
