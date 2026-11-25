@@ -60,14 +60,34 @@ For a quick demo the PowerBoost, cell, slide switch, LEDs and low-battery diode 
 all be left out. The device then runs from a USB-C supply or power bank plugged
 into the case:
 
-- Adafruit 4090 USB-C breakout: 5.1 kΩ from CC1 to GND and from CC2 to GND (unless
-  it already measures about 5.1 kΩ), then VBUS → header pins 2 and 4, GND → pins 6 and 9.
-  Use two or three ribbon conductors in parallel for each.
+- USB-C breakout (Adafruit 4090, or the generic 12-pin "TYPEC12" board): 5.1 kΩ from
+  CC1 to GND and from CC2 to GND (skip this if CC1 to GND already measures about
+  5.1 kΩ; the generic board has no resistors), then VBUS → header pins 2 and 4,
+  GND → pins 6 and 9. Use two or three ribbon conductors in parallel for each.
+  The generic board is not the size the case cradle was drawn for: glue it in.
 - Any USB-C supply or power bank that gives 5 V at 3 A works; the official 27 W
   Raspberry Pi supply does.
 - Leave `low_battery_pin` as it is: with nothing connected the pull-up keeps it high,
   so the device never says "battery low".
-- Buttons, camera, amplifier and speaker are wired as above.
+- Buttons and camera are wired as above.
+
+### Demo audio without the I2S amplifier
+
+If the MAX98357A is not at hand, use the CM5-NANO-B's own headphone output (a USB
+audio chip on the carrier, "USB PnP Audio Device") and a small analog amplifier:
+
+- 3.5 mm stereo plug into the carrier's jack. Tip (left) → PAM8302 A+, sleeve
+  (ground) → PAM8302 A−. The ring (right) is not needed: speech is mono.
+- PAM8302 VIN → 5 V (header pin 2 or 4), GND → GND. Speaker on the PAM8302 + / − output.
+- The jack faces into the battery bay. With no cell fitted, the plug and the amplifier
+  fit there; tape the amplifier down.
+- Do **not** add `dtoverlay=max98357a` for this build. Make the USB audio device the
+  default output: `wpctl status` to find its sink id, then `wpctl set-default <id>`
+  (or Raspberry Pi Configuration → Audio). `aplay -l` should list "USB PnP Audio Device".
+- Start with the PAM8302 trim pot at half and set loudness with Volume +/−. A 0.5 W
+  speaker can be overdriven at full volume: if speech distorts, turn the pot down.
+- The speaker pocket is 6 mm deep. A 40 mm speaker deeper than about 7 mm hits the
+  40-pin header and its solder joints.
 
 ## Power
 
